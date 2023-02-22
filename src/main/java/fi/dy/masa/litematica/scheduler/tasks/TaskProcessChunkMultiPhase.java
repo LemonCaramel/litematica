@@ -267,15 +267,17 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
     protected void sendCommand(String command, ClientPlayerEntity player)
     {
         // caramel start
-        final var dispatcher = player.networkHandler.getCommandDispatcher();
-        final var src = player.networkHandler.getCommandSource();
-        if (SignedArgumentList.of(dispatcher.parse(command, src)).arguments().isEmpty()) {
-            player.networkHandler.sendPacket(new CustomPayloadC2SPacket(
-                NAMESPACE, new PacketByteBuf(Unpooled.buffer()).writeString(command)
-            ));
+        if (Configs.Generic.USE_LITEMATICA_PROTOCOL.getBooleanValue()) {
+            final var dispatcher = player.networkHandler.getCommandDispatcher();
+            final var src = player.networkHandler.getCommandSource();
+            if (SignedArgumentList.of(dispatcher.parse(command, src)).arguments().isEmpty()) {
+                player.networkHandler.sendPacket(new CustomPayloadC2SPacket(
+                    NAMESPACE, new PacketByteBuf(Unpooled.buffer()).writeString(command)
+                ));
+            }
+            ++this.sentCommandsThisTick;
+            return;
         }
-        ++this.sentCommandsThisTick;
-        if (true) return;
         // caramel end
         player.networkHandler.sendCommand(command);
         ++this.sentCommandsThisTick;
