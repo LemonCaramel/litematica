@@ -16,9 +16,17 @@ import fi.dy.masa.malilib.util.IntBoundingBox;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.util.ToBooleanFunction;
+// caramel start
+import io.netty.buffer.Unpooled;
+import net.minecraft.command.argument.SignedArgumentList;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
+import net.minecraft.util.Identifier;
+// caramel end
 
 public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 {
+    private static final Identifier NAMESPACE = new Identifier("litematica", "command"); // caramel
     protected TaskPhase phase = TaskPhase.INIT;
     @Nullable protected ChunkPos currentChunkPos;
     @Nullable protected IntBoundingBox currentBox;
@@ -258,6 +266,17 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 
     protected void sendCommand(String command, ClientPlayerEntity player)
     {
+        // caramel start
+        final var dispatcher = player.networkHandler.getCommandDispatcher();
+        final var src = player.networkHandler.getCommandSource();
+        if (SignedArgumentList.of(dispatcher.parse(command, src)).arguments().isEmpty()) {
+            player.networkHandler.sendPacket(new CustomPayloadC2SPacket(
+                NAMESPACE, new PacketByteBuf(Unpooled.buffer()).writeString(command)
+            ));
+        }
+        ++this.sentCommandsThisTick;
+        if (true) return;
+        // caramel end
         player.networkHandler.sendCommand(command);
         ++this.sentCommandsThisTick;
     }
